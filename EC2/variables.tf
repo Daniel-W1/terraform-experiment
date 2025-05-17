@@ -11,13 +11,3 @@ variable "ssh_public_key" {
   description = "SSH public key for EC2 instance access"
   type        = string
 }
-
-variable "rds_endpoint" {
-  description = "RDS instance endpoint"
-  type        = string
-}
-
-variable "s3_bucket_name" {
-  description = "S3 bucket name"
-  type        = string
-}
