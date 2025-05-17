@@ -19,6 +19,7 @@ jobs:
   terraform:
     name: 'Terraform'
     runs-on: ubuntu-latest
+    environment: pipeline
 
     outputs:
       rds_endpoint: ${{ steps.rds-output.outputs.endpoint }}
