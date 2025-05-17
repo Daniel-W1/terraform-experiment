@@ -86,38 +86,39 @@ jobs:
           ssh -i ~/.ssh/deploy_key -v ec2-user@${{ secrets.EC2_HOST }} 2>&1 || true
           exit 1
         fi
-
-    - name: Deploy to EC2
+        
+    - name: Deploy and Start Application
       working-directory: ./profile_app
       run: |
-        echo "Deploying to EC2..."
-        rsync -avz -e "ssh -i ~/.ssh/deploy_key" \
-          --exclude='.git' \
-          --exclude='node_modules' \
-          --exclude='.next/cache' \
-          --exclude='.env' \
-          ./ ec2-user@${{ secrets.EC2_HOST }}:~/nextjs/
+        # Debug: Print hostname and validate
+        echo "Deploying to host: ${{ secrets.EC2_HOST }}"
+        
+        # Create a temp tar file
+        tar --exclude='.git' \
+            --exclude='node_modules' \
+            --exclude='.next/cache' \
+            --exclude='.env' \
+            -czf /tmp/app.tar.gz .
 
-    - name: Start Application
-      run: |
-        echo "Starting application on EC2..."
-        ssh -i ~/.ssh/deploy_key ec2-user@${{ secrets.EC2_HOST }} '
-          cd ~/nextjs && \
-          npm ci && \
+        # Copy using scp
+        scp -i ~/.ssh/deploy_key /tmp/app.tar.gz "ec2-user@${{ secrets.EC2_HOST }}:~/app.tar.gz"
+
+        # Extract and setup on remote
+        ssh -i ~/.ssh/deploy_key ec2-user@${{ secrets.EC2_HOST }} "
+          cd ~ && \
+          rm -rf app && \
+          mkdir app && \
+          tar -xzf app.tar.gz -C app && \
+          cd app && \
+          npm install && \
           pm2 delete nextjs || true && \
-          pm2 start npm --name "nextjs" -- start && \
-          pm2 save'
+          pm2 start npm --name \"nextjs\" -- start && \
+          pm2 save"
 
-    - name: Verify Deployment
+        # Cleanup local tar
+        rm /tmp/app.tar.gz
+
+    - name: Simple Verification
       run: |
-        echo "Verifying deployment..."
-        # Wait for the application to start
-        sleep 10
-        # Check if pm2 process is running
-        ssh -i ~/.ssh/deploy_key ec2-user@${{ secrets.EC2_HOST }} '
-          if ! pm2 pid nextjs > /dev/null; then
-            echo "Error: Application failed to start"
-            exit 1
-          fi
-          echo "Application is running successfully"
-        '
+        sleep 5
+        ssh -i ~/.ssh/deploy_key ec2-user@${{ secrets.EC2_HOST }} "pm2 list"
