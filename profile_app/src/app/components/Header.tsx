@@ -1,6 +1,11 @@
+'use client'
+
 import Link from 'next/link'
+import { useAuth } from '@/app/context/AuthContext'
 
 export default function Header() {
+  const { user, logout } = useAuth()
+
   return (
     <header className="bg-black/90 border-b border-gray-800">
       <nav className="container mx-auto px-4 py-4">
@@ -9,13 +14,35 @@ export default function Header() {
             Profile App
           </Link>
           
-          <div className="flex gap-6">
-            <Link href="/profile" className="text-gray-300 hover:text-purple-400 transition-colors">
-              Profile
-            </Link>
-            <Link href="/settings" className="text-gray-300 hover:text-purple-400 transition-colors">
-              Settings
-            </Link>
+          <div className="flex items-center gap-6">
+            {user ? (
+              <>
+                <Link href="/profile" className="text-gray-300 hover:text-purple-400 transition-colors">
+                  My Profile
+                </Link>
+                <Link href="/settings" className="text-gray-300 hover:text-purple-400 transition-colors">
+                  Settings
+                </Link>
+                <button
+                  onClick={logout}
+                  className="text-gray-300 hover:text-purple-400 transition-colors"
+                >
+                  Sign out
+                </button>
+              </>
+            ) : (
+              <>
+                <Link href="/auth/login" className="text-gray-300 hover:text-purple-400 transition-colors">
+                  Sign in
+                </Link>
+                <Link
+                  href="/auth/register"
+                  className="px-4 py-2 bg-gradient-to-r from-purple-400 to-pink-500 text-white rounded-md hover:from-purple-500 hover:to-pink-600 transition-colors"
+                >
+                  Sign up
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </nav>
