@@ -115,12 +115,13 @@ jobs:
         echo "Using target directory: $TARGET_DIR"
         
         echo "Deploying to EC2..."
+        echo "TARGET_DIR value: '$TARGET_DIR'"
         rsync -avz -e "ssh -i ~/.ssh/deploy_key" \
           --exclude='.git' \
           --exclude='node_modules' \
           --exclude='.next/cache' \
           --exclude='.env' \
-          ./ "ec2-user@${{ secrets.EC2_HOST }}:$TARGET_DIR/"
+          ./ "ec2-user@${{ secrets.EC2_HOST }}:${TARGET_DIR:-/home/ec2-user/nextjs}/"
         echo "Deployment completed successfully"
 
     - name: Start Application
