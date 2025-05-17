@@ -86,28 +86,60 @@ jobs:
           ssh -i ~/.ssh/deploy_key -v ec2-user@${{ secrets.EC2_HOST }} 2>&1 || true
           exit 1
         fi
+        
+    - name: Prepare Target Directory
+      run: |
+        echo "Creating destination directory on EC2..."
+        ssh -i ~/.ssh/deploy_key ec2-user@${{ secrets.EC2_HOST }} '
+          # Try to create the directory with sudo if available
+          if command -v sudo >/dev/null 2>&1; then
+            sudo mkdir -p /var/www/nextjs
+            sudo chown -R ec2-user:ec2-user /var/www/nextjs
+          else
+            # Try to create in home directory if sudo not available
+            mkdir -p ~/nextjs
+          fi
+        '
 
     - name: Deploy to EC2
       working-directory: ./profile_app
       run: |
+        echo "Checking target directory..."
+        TARGET_DIR=$(ssh -i ~/.ssh/deploy_key ec2-user@${{ secrets.EC2_HOST }} '
+          if [ -d "/var/www/nextjs" ] && [ -w "/var/www/nextjs" ]; then
+            echo "/var/www/nextjs"
+          else
+            echo "$HOME/nextjs"
+          fi
+        ')
+        echo "Using target directory: $TARGET_DIR"
+        
         echo "Deploying to EC2..."
         rsync -avz -e "ssh -i ~/.ssh/deploy_key" \
           --exclude='.git' \
           --exclude='node_modules' \
           --exclude='.next/cache' \
           --exclude='.env' \
-          ./ ec2-user@${{ secrets.EC2_HOST }}:/var/www/nextjs/
+          ./ "ec2-user@${{ secrets.EC2_HOST }}:$TARGET_DIR/"
         echo "Deployment completed successfully"
 
     - name: Start Application
       run: |
         echo "Starting application on EC2..."
-        ssh -i ~/.ssh/deploy_key ec2-user@${{ secrets.EC2_HOST }} '
-          cd /var/www/nextjs && \
+        TARGET_DIR=$(ssh -i ~/.ssh/deploy_key ec2-user@${{ secrets.EC2_HOST }} '
+          if [ -d "/var/www/nextjs" ]; then
+            echo "/var/www/nextjs"
+          else
+            echo "$HOME/nextjs"
+          fi
+        ')
+        
+        ssh -i ~/.ssh/deploy_key ec2-user@${{ secrets.EC2_HOST }} "
+          cd $TARGET_DIR && \
           npm ci && \
           pm2 delete nextjs || true && \
-          pm2 start npm --name "nextjs" -- start && \
-          pm2 save'
+          pm2 start npm --name \"nextjs\" -- start && \
+          pm2 save"
 
     - name: Verify Deployment
       run: |
