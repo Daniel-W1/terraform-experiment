@@ -58,15 +58,32 @@ jobs:
 
     - name: Setup SSH
       run: |
+        echo "Setting up SSH configuration..."
         mkdir -p ~/.ssh
         echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
         chmod 600 ~/.ssh/deploy_key
-        ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+        echo "Adding SSH key fingerprint..."
+        ssh-keyscan -H -T 60 ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || echo "Warning: ssh-keyscan failed"
+        
+        # Create SSH config file for more reliable connections
+        cat > ~/.ssh/config << EOF
+        Host *
+          StrictHostKeyChecking no
+          UserKnownHostsFile ~/.ssh/known_hosts
+          ServerAliveInterval 60
+          ServerAliveCountMax 30
+          ConnectTimeout 30
+        EOF
+        chmod 600 ~/.ssh/config
 
     - name: Test SSH Connection
       run: |
-        if ! ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no ec2-user@${{ secrets.EC2_HOST }} 'exit'; then
-          echo "Error: Cannot connect to EC2 instance"
+        echo "Testing SSH connection to ${{ secrets.EC2_HOST }}..."
+        if ! ssh -i ~/.ssh/deploy_key -v ec2-user@${{ secrets.EC2_HOST }} 'echo "SSH connection successful"'; then
+          echo "Error: Failed to establish SSH connection"
+          echo "Debugging information:"
+          ls -la ~/.ssh/
+          ssh -i ~/.ssh/deploy_key -v ec2-user@${{ secrets.EC2_HOST }} 2>&1 || true
           exit 1
         fi
 
