@@ -87,6 +87,14 @@ jobs:
           exit 1
         fi
 
+    - name: Prepare EC2 Directory
+      run: |
+        echo "Preparing deployment directory on EC2..."
+        ssh -i ~/.ssh/deploy_key ec2-user@${{ secrets.EC2_HOST }} '
+          sudo mkdir -p /var/www/nextjs
+          sudo chown -R ec2-user:ec2-user /var/www/nextjs
+        '
+
     - name: Deploy to EC2
       working-directory: ./profile_app
       run: |
@@ -96,8 +104,14 @@ jobs:
           --exclude='node_modules' \
           --exclude='.next/cache' \
           --exclude='.env' \
-          ./ ec2-user@${{ secrets.EC2_HOST }}:/var/www/nextjs/
-        echo "Deployment completed successfully"
+          ./ ec2-user@${{ secrets.EC2_HOST }}:/home/ec2-user/nextjs/
+        
+        echo "Moving files to final location..."
+        ssh -i ~/.ssh/deploy_key ec2-user@${{ secrets.EC2_HOST }} '
+          sudo rm -rf /var/www/nextjs/*
+          sudo cp -r /home/ec2-user/nextjs/* /var/www/nextjs/
+          sudo chown -R ec2-user:ec2-user /var/www/nextjs
+        '
 
     - name: Start Application
       run: |
