@@ -93,21 +93,17 @@ jobs:
         # Debug: Print hostname
         echo "Deploying to host: ${{ secrets.EC2_HOST }}"
         
-        # Ensure target directory exists
-        ssh -i ~/.ssh/deploy_key ec2-user@${{ secrets.EC2_HOST }} "mkdir -p /home/ec2-user/nextjs"
-        
-        # Try rsync with verbose output
-        rsync -avvz -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no" \
-          --progress \
+        # Use rsync with home directory
+        rsync -avz -e "ssh -i ~/.ssh/deploy_key" \
           --exclude='.git' \
           --exclude='node_modules' \
           --exclude='.next/cache' \
           --exclude='.env' \
-          ./ ec2-user@${{ secrets.EC2_HOST }}:/home/ec2-user/nextjs/
+          ./ "ec2-user@${{ secrets.EC2_HOST }}:~/"
 
-        # If rsync succeeds, continue with installation and startup
+        # Start app from home directory
         ssh -i ~/.ssh/deploy_key ec2-user@${{ secrets.EC2_HOST }} "
-          cd /home/ec2-user/nextjs && \
+          cd ~ && \
           npm install && \
           pm2 delete nextjs || true && \
           pm2 start npm --name \"nextjs\" -- start && \
