@@ -33,11 +33,28 @@ jobs:
 
     - name: Install Dependencies
       working-directory: ./profile_app
-      run: npm ci
+      run: |
+        echo "Installing dependencies..."
+        npm ci
+        echo "Dependencies installed successfully"
 
     - name: Build Application
       working-directory: ./profile_app
-      run: npm run build
+      run: |
+        echo "Building application..."
+        npm run build
+        echo "Build completed successfully"
+
+    - name: Verify Environment Variables
+      run: |
+        if [ -z "${{ secrets.EC2_HOST }}" ]; then
+          echo "Error: EC2_HOST is not set"
+          exit 1
+        fi
+        if [ -z "${{ secrets.SSH_PRIVATE_KEY }}" ]; then
+          echo "Error: SSH_PRIVATE_KEY is not set"
+          exit 1
+        fi
 
     - name: Setup SSH
       run: |
@@ -46,20 +63,45 @@ jobs:
         chmod 600 ~/.ssh/deploy_key
         ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
 
+    - name: Test SSH Connection
+      run: |
+        if ! ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no ec2-user@${{ secrets.EC2_HOST }} 'exit'; then
+          echo "Error: Cannot connect to EC2 instance"
+          exit 1
+        fi
+
     - name: Deploy to EC2
       working-directory: ./profile_app
       run: |
+        echo "Deploying to EC2..."
         rsync -avz -e "ssh -i ~/.ssh/deploy_key" \
           --exclude='.git' \
           --exclude='node_modules' \
           --exclude='.next/cache' \
+          --exclude='.env' \
           ./ ec2-user@${{ secrets.EC2_HOST }}:/var/www/nextjs/
+        echo "Deployment completed successfully"
 
     - name: Start Application
       run: |
+        echo "Starting application on EC2..."
         ssh -i ~/.ssh/deploy_key ec2-user@${{ secrets.EC2_HOST }} '
           cd /var/www/nextjs && \
           npm ci && \
           pm2 delete nextjs || true && \
-          pm2 start npm --name "nextjs" -- start
+          pm2 start npm --name "nextjs" -- start && \
+          pm2 save'
+
+    - name: Verify Deployment
+      run: |
+        echo "Verifying deployment..."
+        # Wait for the application to start
+        sleep 10
+        # Check if pm2 process is running
+        ssh -i ~/.ssh/deploy_key ec2-user@${{ secrets.EC2_HOST }} '
+          if ! pm2 pid nextjs > /dev/null; then
+            echo "Error: Application failed to start"
+            exit 1
+          fi
+          echo "Application is running successfully"
         '
