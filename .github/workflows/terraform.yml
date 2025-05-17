@@ -90,6 +90,8 @@ jobs:
     - name: Prepare Target Directory
       run: |
         echo "Creating destination directory on EC2..."
+        echo "TARGET_DIR value: '$TARGET_DIR'"
+
         ssh -i ~/.ssh/deploy_key ec2-user@${{ secrets.EC2_HOST }} '
           # Try to create the directory with sudo if available
           if command -v sudo >/dev/null 2>&1; then
