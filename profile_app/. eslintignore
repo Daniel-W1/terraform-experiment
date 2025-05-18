@@ -1,0 +1,11 @@
+# Generated Prisma files
+src/server/generated/**/*
+.next/**/*
+node_modules/**/*
+
+# Build output
+out/**/*
+build/**/*
+
+# Cache
+.eslintcache
