@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useAuth } from '@/app/context/AuthContext'
 
 export default function Header() {
-  const { user, logout } = useAuth()
+  const { user, loading, logout } = useAuth()
 
   return (
     <header className="bg-black/90 border-b border-gray-800">
@@ -15,7 +15,13 @@ export default function Header() {
           </Link>
           
           <div className="flex items-center gap-6">
-            {user ? (
+            {loading ? (
+              // Loading skeleton
+              <div className="flex items-center gap-6">
+                <div className="h-6 w-24 bg-gray-800 rounded animate-pulse"></div>
+                <div className="h-10 w-24 bg-gray-800 rounded animate-pulse"></div>
+              </div>
+            ) : user ? (
               <>
                 <Link href="/profile" className="text-gray-300 hover:text-purple-400 transition-colors">
                   My Profile
