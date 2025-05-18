@@ -167,7 +167,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "/Users/addisuabitew/workspace/terraform-experiment/profile_app/src/server/generated/client",
+      "value": "/Users/danielwossenbekele/serious_projects/terraform_project/profile_app/src/server/generated/client",
       "fromEnvVar": null
     },
     "config": {
@@ -181,12 +181,11 @@ const config = {
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "/Users/addisuabitew/workspace/terraform-experiment/profile_app/src/server/prisma/schema.prisma",
+    "sourceFilePath": "/Users/danielwossenbekele/serious_projects/terraform_project/profile_app/src/server/prisma/schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
-    "rootEnvPath": null,
-    "schemaEnvPath": "../../../../.env"
+    "rootEnvPath": null
   },
   "relativePath": "../../prisma",
   "clientVersion": "6.8.2",
@@ -195,16 +194,17 @@ const config = {
     "db"
   ],
   "activeProvider": "postgresql",
+  "postinstall": false,
   "inlineDatasources": {
     "db": {
       "url": {
-        "fromEnvVar": "DATABASE_URL",
-        "value": null
+        "fromEnvVar": null,
+        "value": "postgresql://terraformadmin:SuperSecret123!@mydb-instance.cgfc680ielzw.us-east-1.rds.amazonaws.com:5432/terraformdb"
       }
     }
   },
-  "inlineSchema": "// This is your Prisma schema file,\n// learn more about it in the docs: https://pris.ly/d/prisma-schema\n\n// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?\n// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init\n\ngenerator client {\n  provider = \"prisma-client-js\"\n  output   = \"../generated/client\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n}\n\nmodel User {\n  id                      String     @id @default(cuid())\n  email                   String     @unique\n  password                String\n  name                    String?\n  profileImage            String?\n  bio                     String?\n  isVerified              Boolean    @default(false)\n  verificationToken       String?\n  verificationTokenExpiry DateTime?\n  resetToken              String?\n  resetTokenExpiry        DateTime?\n  createdAt               DateTime   @default(now())\n  updatedAt               DateTime   @updatedAt\n  portfolio               Portfolio?\n}\n\nmodel Portfolio {\n  id          String          @id @default(cuid())\n  userId      String          @unique\n  user        User            @relation(fields: [userId], references: [id])\n  title       String\n  description String?\n  isPublic    Boolean         @default(true)\n  items       PortfolioItem[]\n  createdAt   DateTime        @default(now())\n  updatedAt   DateTime        @updatedAt\n}\n\nmodel PortfolioItem {\n  id          String    @id @default(cuid())\n  portfolioId String\n  portfolio   Portfolio @relation(fields: [portfolioId], references: [id])\n  title       String\n  description String?\n  mediaUrl    String // S3 URL for the media\n  mediaType   MediaType\n  order       Int       @default(0)\n  isPublic    Boolean   @default(true)\n  createdAt   DateTime  @default(now())\n  updatedAt   DateTime  @updatedAt\n}\n\nenum MediaType {\n  IMAGE\n  VIDEO\n  DOCUMENT\n}\n",
-  "inlineSchemaHash": "7f91303d8561950cf64d4364f6a2a734bf159e3589d1ae132b0f961dbc4a6ca7",
+  "inlineSchema": "// This is your Prisma schema file,\n// learn more about it in the docs: https://pris.ly/d/prisma-schema\n\n// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?\n// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init\n\ngenerator client {\n  provider = \"prisma-client-js\"\n  output   = \"../generated/client\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n  url      = \"postgresql://terraformadmin:SuperSecret123!@mydb-instance.cgfc680ielzw.us-east-1.rds.amazonaws.com:5432/terraformdb\"\n}\n\nmodel User {\n  id                      String     @id @default(cuid())\n  email                   String     @unique\n  password                String\n  name                    String?\n  profileImage            String?\n  bio                     String?\n  isVerified              Boolean    @default(false)\n  verificationToken       String?\n  verificationTokenExpiry DateTime?\n  resetToken              String?\n  resetTokenExpiry        DateTime?\n  createdAt               DateTime   @default(now())\n  updatedAt               DateTime   @updatedAt\n  portfolio               Portfolio?\n}\n\nmodel Portfolio {\n  id          String          @id @default(cuid())\n  userId      String          @unique\n  user        User            @relation(fields: [userId], references: [id])\n  title       String\n  description String?\n  isPublic    Boolean         @default(true)\n  items       PortfolioItem[]\n  createdAt   DateTime        @default(now())\n  updatedAt   DateTime        @updatedAt\n}\n\nmodel PortfolioItem {\n  id          String    @id @default(cuid())\n  portfolioId String\n  portfolio   Portfolio @relation(fields: [portfolioId], references: [id])\n  title       String\n  description String?\n  mediaUrl    String // S3 URL for the media\n  mediaType   MediaType\n  order       Int       @default(0)\n  isPublic    Boolean   @default(true)\n  createdAt   DateTime  @default(now())\n  updatedAt   DateTime  @updatedAt\n}\n\nenum MediaType {\n  IMAGE\n  VIDEO\n  DOCUMENT\n}\n",
+  "inlineSchemaHash": "a538cead12f2b7ad5ec12deebd9aed1ab554f09a03fca7fd395791d8d49fa7f7",
   "copyEngine": true
 }
 config.dirname = '/'
@@ -215,9 +215,7 @@ config.engineWasm = undefined
 config.compilerWasm = undefined
 
 config.injectableEdgeEnv = () => ({
-  parsed: {
-    DATABASE_URL: typeof globalThis !== 'undefined' && globalThis['DATABASE_URL'] || typeof process !== 'undefined' && process.env && process.env.DATABASE_URL || undefined
-  }
+  parsed: {}
 })
 
 if (typeof globalThis !== 'undefined' && globalThis['DEBUG'] || typeof process !== 'undefined' && process.env && process.env.DEBUG || undefined) {
