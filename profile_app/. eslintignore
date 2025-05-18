@@ -9,3 +9,5 @@ build/**/*
 
 # Cache
 .eslintcache
+
+src/**/*
