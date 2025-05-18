@@ -1,38 +1,35 @@
-'use client'
+"use client"
 
-import { useState, useEffect, Suspense } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
-import Link from 'next/link'
-import { useAuth } from '@/app/context/AuthContext'
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import Link from "next/link"
 
-function LoginForm() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const message = searchParams.get("message")
-  const { login } = useAuth()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+export default function ForgotPasswordPage() {
+  const [email, setEmail] = useState("")
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
-
-  useEffect(() => {
-    if (message) {
-      setSuccess(message)
-    }
-  }, [message])
+  const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
+    setSuccess(null)
     setLoading(true)
-
     try {
-      await login(email, password)
-      const redirectTo = searchParams.get('redirectTo') || '/profile'
-      router.push(redirectTo)
+      const res = await fetch("/api/auth/reset-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email })
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error || "Something went wrong")
+      } else {
+        setSuccess("If an account with that email exists, a reset link has been sent.")
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed')
+      setError("Something went wrong. Please try again.")
     } finally {
       setLoading(false)
     }
@@ -43,19 +40,12 @@ function LoginForm() {
       <div className="max-w-md w-full space-y-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent">
-            Sign in to your account
+            Forgot your password?
           </h2>
           <p className="mt-2 text-center text-sm text-gray-400">
-            Or{' '}
-            <Link
-              href="/auth/register"
-              className="font-medium text-purple-400 hover:text-purple-300 transition-colors"
-            >
-              create a new account
-            </Link>
+            Enter your email and we'll send you a reset link.
           </p>
         </div>
-
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {error && (
             <div className="bg-red-500/10 border border-red-500/20 rounded-md p-4 text-red-500 text-sm">
@@ -67,7 +57,6 @@ function LoginForm() {
               {success}
             </div>
           )}
-
           <div className="space-y-4">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-300">
@@ -85,36 +74,7 @@ function LoginForm() {
                 placeholder="you@example.com"
               />
             </div>
-
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-300">
-                Password
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="mt-1 block w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-md text-gray-200 focus:ring-purple-500 focus:border-purple-500"
-                placeholder="••••••••"
-              />
-            </div>
           </div>
-
-          <div className="flex items-center justify-between">
-            <div className="text-sm">
-              <Link
-                href="/auth/reset-password"
-                className="font-medium text-purple-400 hover:text-purple-300 transition-colors"
-              >
-                Forgot your password?
-              </Link>
-            </div>
-          </div>
-
           <button
             type="submit"
             disabled={loading}
@@ -123,19 +83,16 @@ function LoginForm() {
             {loading ? (
               <div className="w-5 h-5 border-t-2 border-b-2 border-white rounded-full animate-spin" />
             ) : (
-              'Sign in'
+              "Send reset link"
             )}
           </button>
         </form>
+        <div className="text-center text-sm text-gray-400">
+          <Link href="/auth/login" className="text-purple-400 hover:text-purple-300 transition-colors">
+            Back to sign in
+          </Link>
+        </div>
       </div>
     </div>
-  )
-}
-
-export default function LoginPage() {
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <LoginForm />
-    </Suspense>
   )
 } 
