@@ -43,3 +43,5 @@ credentials.json
 # Local environment variables
 .env
 *.env 
+
+profile_app/src/server/generated/

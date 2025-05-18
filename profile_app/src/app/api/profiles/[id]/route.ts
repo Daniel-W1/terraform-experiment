@@ -1,18 +1,21 @@
 import { prisma } from '@/server/lib/prisma'
 import { NextResponse } from 'next/server'
 
+type Params = Promise<{ id: string }>;
+
+
 export async function GET(
   request: Request,
 ) {
   // get the id from the url
-  const id = request.url.split('/').pop()
   try {
+    const id = request.url.split('/').pop()
     const profile = await prisma.user.findUnique({
       where: { id },
       select: {
         id: true,
         name: true,
-        email: true,
+        email: true,  
         profileImage: true,
         bio: true,
         createdAt: true,
