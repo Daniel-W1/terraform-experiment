@@ -17,6 +17,7 @@
     "@aws-sdk/s3-presigned-post": "^3.812.0",
     "@aws-sdk/s3-request-presigner": "^3.812.0",
     "@prisma/client": "^6.8.2",
+    "aws-sdk": "^2.1692.0",
     "bcryptjs": "^3.0.2",
     "jsonwebtoken": "^9.0.2",
     "next": "15.3.2",

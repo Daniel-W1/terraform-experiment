@@ -42,7 +42,7 @@ export async function POST(request: Request) {
       }
     })
 
-    const presignedUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 })
+    const presignedUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600,  })
 
     return NextResponse.json({
       presignedUrl,
