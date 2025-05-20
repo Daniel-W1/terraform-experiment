@@ -37,6 +37,13 @@ jobs:
         echo "Installing dependencies..."
         npm install --legacy-peer-deps
         echo "Dependencies installed successfully"
+    
+    - name: Generate Prisma Client
+      working-directory: ./profile_app
+      run: |
+        echo "Generating Prisma client..."
+        npx prisma generate --schema=./src/server/prisma/schema.prisma
+        echo "Prisma client generated successfully"
 
     - name: Build Application
       working-directory: ./profile_app
