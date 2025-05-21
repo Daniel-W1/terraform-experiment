@@ -46,7 +46,7 @@ jobs:
   deploy:
     name: 'Deploy'
     needs: check
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    # if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     environment: pipeline
     steps:
