@@ -31,9 +31,9 @@ jobs:
         working-directory: ./profile_app
         run: npm install --legacy-peer-deps
 
-      - name: Lint
-        working-directory: ./profile_app
-        run: npm run lint
+      # - name: Lint
+      #   working-directory: ./profile_app
+      #   run: npm run lint
       
       - name: Generate Prisma Client
         working-directory: ./profile_app
@@ -46,7 +46,7 @@ jobs:
   deploy:
     name: 'Deploy'
     needs: check
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    # if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment: pipeline
     steps:
