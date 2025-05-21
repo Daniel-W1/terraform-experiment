@@ -2,10 +2,34 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 
+interface PortfolioItem {
+  id: string
+  title: string
+  description?: string | null
+  mediaUrl: string
+  mediaType: 'IMAGE' | 'VIDEO' | 'DOCUMENT'
+  order: number
+  isPublic: boolean
+}
+
+interface Portfolio {
+  id: string
+  title: string
+  description?: string | null
+  isPublic: boolean
+  items: PortfolioItem[]
+}
+
 interface User {
   id: string
-  name: string
+  name: string | null
   email: string
+  profileImage: string | null
+  bio: string | null
+  isVerified: boolean
+  createdAt: string
+  updatedAt: string
+  portfolio?: Portfolio | null
 }
 
 interface AuthContextType {
@@ -13,7 +37,7 @@ interface AuthContextType {
   loading: boolean
   login: (email: string, password: string) => Promise<void>
   register: (name: string, email: string, password: string) => Promise<void>
-  logout: () => void
+  logout: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -24,31 +48,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     // Check if user is logged in on mount
-    const token = localStorage.getItem('token')
-    if (token) {
-      fetchUser(token)
-    } else {
-      setLoading(false)
-    }
+    fetchUser()
   }, [])
 
-  const fetchUser = async (token: string) => {
+  const fetchUser = async () => {
     try {
-      const response = await fetch('/api/auth/me', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
+      const response = await fetch('/api/auth/me')
       
       if (response.ok) {
         const userData = await response.json()
         setUser(userData)
       } else {
-        localStorage.removeItem('token')
+        setUser(null)
       }
     } catch (error) {
       console.error('Error fetching user:', error)
-      localStorage.removeItem('token')
+      setUser(null)
     } finally {
       setLoading(false)
     }
@@ -69,11 +84,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error(data.error || 'Login failed')
     }
 
-    localStorage.setItem('token', data.token)
     setUser({
       id: data.id,
       name: data.name,
-      email: data.email
+      email: data.email,
+      profileImage: data.profileImage,
+      bio: data.bio,
+      isVerified: data.isVerified,
+      createdAt: data.createdAt,
+      updatedAt: data.updatedAt,
+      portfolio: data.portfolio
     })
   }
 
@@ -96,9 +116,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await login(email, password)
   }
 
-  const logout = () => {
-    localStorage.removeItem('token')
+  const logout = async () => {
+    try {
+      await fetch('/api/auth/logout', {
+        method: 'POST'
+      })
+    } catch (error) {
+      console.error('Error during logout:', error)
+    } finally {
     setUser(null)
+    }
   }
 
   return (

@@ -23,7 +23,14 @@ export async function POST(request: Request) {
 
     // Find user
     const user = await prisma.user.findUnique({
-      where: { email }
+      where: { email },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        password: true,
+        isVerified: true
+      }
     })
     
     console.log('User found:', user ? 'Yes' : 'No')
@@ -32,7 +39,8 @@ export async function POST(request: Request) {
         id: user.id,
         email: user.email,
         name: user.name,
-        hasPassword: !!user.password
+        hasPassword: !!user.password,
+        isVerified: user.isVerified
       })
     }
 
@@ -61,13 +69,23 @@ export async function POST(request: Request) {
       { expiresIn: '7d' }
     )
 
-    // Return user data and token
-    return NextResponse.json({
+    // Create response with user data
+    const response = NextResponse.json({
       id: user.id,
       email: user.email,
       name: user.name,
-      token
+      isVerified: user.isVerified
     })
+
+    // Set HTTP-only cookie
+    response.cookies.set('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 // 7 days
+    })
+
+    return response
   } catch (error) {
     console.error('Login error:', error)
     return NextResponse.json(

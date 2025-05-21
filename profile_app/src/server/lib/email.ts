@@ -8,7 +8,10 @@ const sesClient = new SESClient({
   },
 })
 
-export async function sendEmail({ to, subject, text }: { to: string; subject: string; text: string }) {
+export async function sendEmail({ to, subject, html }: { to: string; subject: string; html: string }) {
+  if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY || !process.env.AWS_REGION) {
+    throw new Error('AWS credentials are not set in environment variables')
+  }
   const params = {
     Source: process.env.SES_FROM_EMAIL!,
     Destination: {
@@ -19,20 +22,12 @@ export async function sendEmail({ to, subject, text }: { to: string; subject: st
         Data: subject,
       },
       Body: {
-        Text: {
-          Data: text,
+        Html: {
+          Data: html,
         },
       },
     },
   }
-
-  try {
-    const command = new SendEmailCommand(params)
-    const response = await sesClient.send(command)
-    console.log('Email sent successfully:', response)
-    return response
-  } catch (error) {
-    console.error('Error sending email:', error)
-    throw error
-  }
+  console.log('Sending email:', params)
+  return sesClient.send(new SendEmailCommand(params))
 }

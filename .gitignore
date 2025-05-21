@@ -42,4 +42,7 @@ credentials.json
 
 # Local environment variables
 .env
-*.env 
+*.env
+
+profile_app/src/server/generated/
+profile_app/src/server/prisma/migrations/

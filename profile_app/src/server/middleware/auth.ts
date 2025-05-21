@@ -27,6 +27,7 @@ export async function authMiddleware(request: Request) {
 
     return { user }
   } catch (error) {
+    console.error("Error in authMiddleware: ", error)
     return NextResponse.json(
       { error: 'Invalid token' },
       { status: 401 }

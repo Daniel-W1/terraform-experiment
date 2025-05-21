@@ -4,8 +4,15 @@ import { NextResponse } from "next/server"
 
 export async function POST(request: Request) {
   try {
-    const rawBody = await request.text()
-    const { token, password } = JSON.parse(rawBody)
+    const { token, password } = await request.json()
+
+    // Validate password
+    if (!password || password.length < 8) {
+      return NextResponse.json(
+        { error: 'Password must be at least 8 characters long' },
+        { status: 400 }
+      )
+    }
 
     const user = await prisma.user.findFirst({
       where: {
@@ -18,7 +25,7 @@ export async function POST(request: Request) {
 
     if (!user) {
       return NextResponse.json(
-        { error: 'Invalid or expired token' },
+        { error: 'Invalid or expired reset token' },
         { status: 400 }
       )
     }
@@ -34,8 +41,9 @@ export async function POST(request: Request) {
       }
     })
 
-    return NextResponse.json({ message: 'Password updated' })
+    return NextResponse.json({ message: 'Password reset successful' })
   } catch (error) {
+    console.error('Reset password confirmation error:', error)
     return NextResponse.json(
       { error: 'Error resetting password' },
       { status: 500 }
