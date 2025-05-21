@@ -146,12 +146,12 @@ jobs:
             rm -rf app && \
             mkdir app && \
             tar -xzf app.tar.gz -C app && \
+            rm app.tar.gz && \
             cd app && \
             npm install --legacy-peer-deps && \
             npx prisma generate --schema=./src/server/prisma/schema.prisma && \
             npm run build && \
             pm2 delete nextjs || true && \
-            pm2 start npm --name "next-app" -- start
             pm2 start npm --name \"nextjs\" -- start && \
             pm2 save"
 
