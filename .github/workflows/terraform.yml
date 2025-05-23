@@ -93,7 +93,7 @@ jobs:
             exit 1
           fi && \
           export NODE_OPTIONS='--max-old-space-size=4096' && \
-          npm install --legacy-peer-deps"
+          npm --prefix ~/app install --legacy-peer-deps"
 
     - name: Generate Prisma and Prepare Build
       run: |
@@ -105,7 +105,7 @@ jobs:
           fi && \
           export NODE_OPTIONS='--max-old-space-size=4096' && \
           export NEXT_TELEMETRY_DISABLED=1 && \
-          npx prisma generate --schema=./src/server/prisma/schema.prisma && \
+          npx --prefix ~/app prisma generate --schema=./src/server/prisma/schema.prisma && \
           echo 'Preparing for build...' && \
           rm -rf .next && \
           mkdir -p .next"
@@ -126,7 +126,7 @@ jobs:
           echo 'Starting build in' \$(pwd) && \
           (while true; do echo 'Build still running...'; free -h; ls -la; sleep 30; done) & \
           MONITOR_PID=$! && \
-          npm run build && \
+          npm --prefix ~/app run build && \
           kill $MONITOR_PID || true"
 
     - name: Start Application
@@ -139,7 +139,7 @@ jobs:
           fi && \
           export NODE_OPTIONS='--max-old-space-size=4096' && \
           pm2 delete nextjs || true && \
-          pm2 start npm --name \"nextjs\" -- start && \
+          pm2 start --cwd ~/app npm --name \"nextjs\" -- start && \
           pm2 save"
 
     - name: Cleanup and Verify
