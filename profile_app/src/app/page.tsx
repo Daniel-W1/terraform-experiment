@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 
@@ -40,16 +40,12 @@ export default function Home() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    fetchProfiles()
-  }, [pagination.page])
-
-  const fetchProfiles = async () => {
+  const fetchProfile = useCallback(async () => {
     try {
       setLoading(true)
       const response = await fetch(`/api/profiles?page=${pagination.page}&limit=${pagination.limit}`)
       const data = await response.json()
-      
+
       if (!response.ok) {
         throw new Error(data.error || 'Failed to fetch profiles')
       }
@@ -61,7 +57,11 @@ export default function Home() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [pagination.page, pagination.limit]);
+  
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile]);
 
   if (loading) {
     return (
@@ -90,8 +90,8 @@ export default function Home() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {profiles.map((profile) => (
-          <Link 
-            href={`/profile/${profile.id}`} 
+          <Link
+            href={`/profiles/${profile.id}`}
             key={profile.id}
             className="group"
           >
@@ -118,7 +118,7 @@ export default function Home() {
                   <p className="text-gray-400 text-sm">{profile.email}</p>
                 </div>
               </div>
-              
+
               {profile.bio && (
                 <p className="text-gray-300 text-sm line-clamp-2 mb-4">
                   {profile.bio}

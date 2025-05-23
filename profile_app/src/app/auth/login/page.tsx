@@ -1,17 +1,26 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/app/context/AuthContext'
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const message = searchParams.get("message")
   const { login } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    if (message) {
+      setSuccess(message)
+    }
+  }, [message])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -20,7 +29,8 @@ export default function LoginPage() {
 
     try {
       await login(email, password)
-      router.push('/')
+      const redirectTo = searchParams.get('redirectTo') || '/profile'
+      router.push(redirectTo)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed')
     } finally {
@@ -50,6 +60,11 @@ export default function LoginPage() {
           {error && (
             <div className="bg-red-500/10 border border-red-500/20 rounded-md p-4 text-red-500 text-sm">
               {error}
+            </div>
+          )}
+          {success && (
+            <div className="bg-green-500/10 border border-green-500/20 rounded-md p-4 text-green-500 text-sm">
+              {success}
             </div>
           )}
 
@@ -114,5 +129,13 @@ export default function LoginPage() {
         </form>
       </div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <LoginForm />
+    </Suspense>
   )
 } 
