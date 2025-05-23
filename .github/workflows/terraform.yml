@@ -94,6 +94,13 @@ jobs:
           export NODE_OPTIONS='--max-old-space-size=4096' && \
           npm --prefix ~/app install --legacy-peer-deps"
 
+    - name: Copy Environment File
+      working-directory: ./profile_app
+      run: |
+        echo "Copying .env file to EC2..."
+        scp -i ~/.ssh/deploy_key .env ec2-user@${{ secrets.EC2_HOST }}:~/app/.env
+        echo ".env file copied successfully"
+
     - name: Generate Prisma and Prepare Build
       run: |
         ssh -i ~/.ssh/deploy_key ec2-user@${{ secrets.EC2_HOST }} "
