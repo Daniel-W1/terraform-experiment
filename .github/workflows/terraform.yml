@@ -11,6 +11,7 @@ env:
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
   AWS_REGION: us-east-1
   TF_VAR_ssh_public_key: ${{ secrets.SSH_PUBLIC_KEY }}
+  NODE_OPTIONS: "--max-old-space-size=4096"
 
 jobs:
   deploy:
@@ -86,12 +87,14 @@ jobs:
           tar -xzf app.tar.gz -C app && \
           rm app.tar.gz && \
           cd app && \
+          export NODE_OPTIONS='--max-old-space-size=4096' && \
           npm install --legacy-peer-deps"
 
     - name: Generate Prisma and Build
       run: |
         ssh -i ~/.ssh/deploy_key ec2-user@${{ secrets.EC2_HOST }} "
           cd ~/app && \
+          export NODE_OPTIONS='--max-old-space-size=4096' && \
           npx prisma generate --schema=./src/server/prisma/schema.prisma && \
           npm run build"
 
@@ -99,6 +102,7 @@ jobs:
       run: |
         ssh -i ~/.ssh/deploy_key ec2-user@${{ secrets.EC2_HOST }} "
           cd ~/app && \
+          export NODE_OPTIONS='--max-old-space-size=4096' && \
           pm2 delete nextjs || true && \
           pm2 start npm --name \"nextjs\" -- start && \
           pm2 save"
