@@ -14,13 +14,13 @@ export async function POST(request: Request) {
 
     const token = request.headers.get('cookie')?.split(';').find(c => c.trim().startsWith('token='))?.split('=')[1]
     if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: 'Unauthorized token not found' }, { status: 401 })
     }
 
     // Verify JWT token
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key') as { userId: string }
     if (!decoded.userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: 'Unauthorized can\'t decode user id' }, { status: 401 })
     }
 
     const formData = await request.formData()
