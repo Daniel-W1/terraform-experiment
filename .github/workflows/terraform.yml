@@ -71,6 +71,7 @@ jobs:
             --exclude='.next/cache' \
             --exclude='.env' \
             --exclude='src/server/generated' \
+            --exclude='.next' \
             -czf /tmp/app.tar.gz .
 
     - name: Copy to EC2
@@ -90,13 +91,28 @@ jobs:
           export NODE_OPTIONS='--max-old-space-size=4096' && \
           npm install --legacy-peer-deps"
 
-    - name: Generate Prisma and Build
+    - name: Generate Prisma and Prepare Build
       run: |
         ssh -i ~/.ssh/deploy_key ec2-user@${{ secrets.EC2_HOST }} "
           cd ~/app && \
           export NODE_OPTIONS='--max-old-space-size=4096' && \
+          export NEXT_TELEMETRY_DISABLED=1 && \
           npx prisma generate --schema=./src/server/prisma/schema.prisma && \
-          npm run build"
+          echo 'Preparing for build...' && \
+          rm -rf .next && \
+          mkdir -p .next"
+
+    - name: Run Next.js Build with Monitoring
+      run: |
+        ssh -i ~/.ssh/deploy_key ec2-user@${{ secrets.EC2_HOST }} "
+          cd ~/app && \
+          export NODE_OPTIONS='--max-old-space-size=4096' && \
+          export NEXT_TELEMETRY_DISABLED=1 && \
+          export NEXT_DEBUG=1 && \
+          (while true; do echo 'Build still running...'; free -h; sleep 30; done) & \
+          MONITOR_PID=$! && \
+          npm run build -- --debug && \
+          kill $MONITOR_PID || true"
 
     - name: Start Application
       run: |
