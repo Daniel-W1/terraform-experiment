@@ -97,8 +97,31 @@ jobs:
     - name: Copy Environment File
       working-directory: ./profile_app
       run: |
+        # Create .env file from secrets
+        echo "Creating .env file from secrets..."
+        cat > .env << 'EOF'
+DATABASE_URL="${{ secrets.DATABASE_URL }}"
+JWT_SECRET="${{ secrets.JWT_SECRET }}"
+AWS_ACCESS_KEY_ID="${{ secrets.AWS_ACCESS_KEY_ID }}"
+AWS_SECRET_ACCESS_KEY="${{ secrets.AWS_SECRET_ACCESS_KEY }}"
+AWS_REGION="${{ env.AWS_REGION }}"
+AWS_S3_BUCKET_NAME="${{ secrets.AWS_S3_BUCKET_NAME }}"
+SES_FROM_EMAIL="${{ secrets.SES_FROM_EMAIL }}"
+NEXT_PUBLIC_APP_URL="${{ secrets.NEXT_PUBLIC_APP_URL }}"
+EOF
+
+        # Verify .env file was created and has content
+        if [ ! -s .env ]; then
+          echo "Error: .env file is empty or not created"
+          ls -la .env
+          exit 1
+        fi
+        
         echo "Copying .env file to EC2..."
-        scp -i ~/.ssh/deploy_key .env ec2-user@${{ secrets.EC2_HOST }}:~/app/.env
+        scp -i ~/.ssh/deploy_key .env ec2-user@${{ secrets.EC2_HOST }}:~/app/.env || {
+          echo "Failed to copy .env file"
+          exit 1
+        }
         echo ".env file copied successfully"
 
     - name: Generate Prisma and Prepare Build
