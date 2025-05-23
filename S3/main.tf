@@ -11,17 +11,6 @@ resource "aws_s3_bucket" "profile_app_bucket" {
   }
 }
 
-# IAM User for S3 access
-resource "aws_iam_user" "profile_app_user" {
-  name = "profile-app-s3-user"
-  path = "/"
-
-  tags = {
-    Name        = "Profile App S3 User"
-    Environment = "production"
-  }
-}
-
 resource "aws_s3_bucket_public_access_block" "profile_app_bucket_public_access_block" {
   bucket = aws_s3_bucket.profile_app_bucket.id
 
