@@ -69,7 +69,6 @@ jobs:
         tar --exclude='.git' \
             --exclude='node_modules' \
             --exclude='.next/cache' \
-            --exclude='.env' \
             --exclude='src/server/generated' \
             --exclude='.next' \
             -czf /tmp/app.tar.gz .
