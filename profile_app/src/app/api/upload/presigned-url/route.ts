@@ -12,7 +12,24 @@ export async function POST(request: Request) {
       }
     })
 
-    const token = request.headers.get('cookie')?.split(';').find(c => c.trim().startsWith('token='))?.split('=')[1]
+    const cookies = request.headers.get('cookie')
+    console.log('Raw cookies:', cookies)
+    
+    // Try different methods to extract the token
+    let token = null
+    if (cookies) {
+      const cookiesArray = cookies.split(';').map(c => c.trim())
+      console.log('Cookies array:', cookiesArray)
+      
+      // Try direct token match
+      const tokenCookie = cookiesArray.find(c => c.startsWith('token='))
+      if (tokenCookie) {
+        token = tokenCookie.split('=')[1]
+      }
+    }
+    
+    console.log('Found token:', token ? 'Yes' : 'No')
+    
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized token not found' }, { status: 401 })
     }
