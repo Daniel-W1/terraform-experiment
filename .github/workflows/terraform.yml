@@ -97,18 +97,17 @@ jobs:
     - name: Copy Environment File
       working-directory: ./profile_app
       run: |
-        # Create .env file from secrets
         echo "Creating .env file from secrets..."
-        cat > .env << 'EOF'
-DATABASE_URL="${{ secrets.DATABASE_URL }}"
-JWT_SECRET="${{ secrets.JWT_SECRET }}"
-AWS_ACCESS_KEY_ID="${{ secrets.AWS_ACCESS_KEY_ID }}"
-AWS_SECRET_ACCESS_KEY="${{ secrets.AWS_SECRET_ACCESS_KEY }}"
-AWS_REGION="${{ env.AWS_REGION }}"
-AWS_S3_BUCKET_NAME="${{ secrets.AWS_S3_BUCKET_NAME }}"
-SES_FROM_EMAIL="${{ secrets.SES_FROM_EMAIL }}"
-NEXT_PUBLIC_APP_URL="${{ secrets.NEXT_PUBLIC_APP_URL }}"
-EOF
+        {
+          echo "DATABASE_URL=${{ secrets.DATABASE_URL }}"
+          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}"
+          echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}"
+          echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}"
+          echo "AWS_REGION=${{ env.AWS_REGION }}"
+          echo "AWS_S3_BUCKET_NAME=${{ secrets.AWS_S3_BUCKET_NAME }}"
+          echo "SES_FROM_EMAIL=${{ secrets.SES_FROM_EMAIL }}"
+          echo "NEXT_PUBLIC_APP_URL=${{ secrets.NEXT_PUBLIC_APP_URL }}"
+        } > .env
 
         # Verify .env file was created and has content
         if [ ! -s .env ]; then
