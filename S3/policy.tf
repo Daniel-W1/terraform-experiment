@@ -5,7 +5,7 @@ resource "aws_s3_bucket_policy" "profile_app_bucket_policy" {
     Version = "2012-10-17"
     Statement = [
       {
-        Sid       = "AllowPublicRead"
+        Sid       = "PublicReadGetObject"
         Effect    = "Allow"
         Principal = "*"
         Action    = "s3:GetObject"
@@ -15,12 +15,13 @@ resource "aws_s3_bucket_policy" "profile_app_bucket_policy" {
         Sid       = "AllowAuthenticatedUploads"
         Effect    = "Allow"
         Principal = {
-          AWS = aws_iam_user.profile_app_user.arn
+          AWS = "*"
         }
         Action = [
           "s3:PutObject",
           "s3:PutObjectAcl",
           "s3:GetObject",
+          "s3:DeleteObject",
           "s3:ListBucket"
         ]
         Resource = [
