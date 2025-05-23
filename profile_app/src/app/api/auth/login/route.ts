@@ -80,7 +80,7 @@ export async function POST(request: Request) {
     // Set HTTP-only cookie
     response.cookies.set('token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: false,  // Set to false since we're using http:// with IP
       sameSite: 'lax',
       maxAge: 7 * 24 * 60 * 60 // 7 days
     })
