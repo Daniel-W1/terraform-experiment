@@ -118,10 +118,10 @@ EOF
         fi
         
         echo "Copying .env file to EC2..."
-        scp -i ~/.ssh/deploy_key .env ec2-user@${{ secrets.EC2_HOST }}:~/app/.env || {
+        if ! scp -i ~/.ssh/deploy_key .env ec2-user@${{ secrets.EC2_HOST }}:~/app/.env; then
           echo "Failed to copy .env file"
           exit 1
-        }
+        fi
         echo ".env file copied successfully"
 
     - name: Generate Prisma and Prepare Build
