@@ -42,14 +42,26 @@ jobs:
       working-directory: ./profile_app
       run: npm run build
 
-    - name: Setup SSH
+    - name: Setup SSH with Persistence
       run: |
         mkdir -p ~/.ssh
         echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
         chmod 600 ~/.ssh/deploy_key
         ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+        
+        # Create SSH config with connection persistence settings
+        cat > ~/.ssh/config << EOF
+        Host *
+          ServerAliveInterval 60
+          ServerAliveCountMax 10
+          TCPKeepAlive yes
+          ControlMaster auto
+          ControlPath ~/.ssh/control-%r@%h:%p
+          ControlPersist 10m
+        EOF
+        chmod 600 ~/.ssh/config
 
-    - name: Deploy to EC2
+    - name: Prepare Deployment Package
       working-directory: ./profile_app
       run: |
         # Create deployment package
@@ -60,10 +72,13 @@ jobs:
             --exclude='src/server/generated' \
             -czf /tmp/app.tar.gz .
 
-        # Copy to EC2
-        scp -i ~/.ssh/deploy_key /tmp/app.tar.gz ec2-user@${{ secrets.EC2_HOST }}:~/app.tar.gz
+    - name: Copy to EC2
+      run: |
+        # Copy with compression and verbose output
+        scp -C -v -i ~/.ssh/deploy_key /tmp/app.tar.gz ec2-user@${{ secrets.EC2_HOST }}:~/app.tar.gz
 
-        # Deploy and start on EC2
+    - name: Extract and Install Dependencies
+      run: |
         ssh -i ~/.ssh/deploy_key ec2-user@${{ secrets.EC2_HOST }} "
           cd ~ && \
           rm -rf app && \
@@ -71,17 +86,25 @@ jobs:
           tar -xzf app.tar.gz -C app && \
           rm app.tar.gz && \
           cd app && \
-          npm install --legacy-peer-deps && \
+          npm install --legacy-peer-deps"
+
+    - name: Generate Prisma and Build
+      run: |
+        ssh -i ~/.ssh/deploy_key ec2-user@${{ secrets.EC2_HOST }} "
+          cd ~/app && \
           npx prisma generate --schema=./src/server/prisma/schema.prisma && \
-          npm run build && \
+          npm run build"
+
+    - name: Start Application
+      run: |
+        ssh -i ~/.ssh/deploy_key ec2-user@${{ secrets.EC2_HOST }} "
+          cd ~/app && \
           pm2 delete nextjs || true && \
           pm2 start npm --name \"nextjs\" -- start && \
           pm2 save"
 
-        # Cleanup local tar
-        rm /tmp/app.tar.gz
-
-    - name: Verify Deployment
+    - name: Cleanup and Verify
       run: |
+        rm /tmp/app.tar.gz
         sleep 5
         ssh -i ~/.ssh/deploy_key ec2-user@${{ secrets.EC2_HOST }} "pm2 list"
