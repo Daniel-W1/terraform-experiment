@@ -106,44 +106,28 @@ jobs:
           export NODE_OPTIONS='--max-old-space-size=4096' && \
           export NEXT_TELEMETRY_DISABLED=1 && \
           npx --prefix ~/app prisma generate --schema=./src/server/prisma/schema.prisma && \
-          echo 'Preparing for build...' && \
           rm -rf .next && \
           mkdir -p .next"
 
-    - name: Run Next.js Build with Monitoring
+    - name: Build Next.js Application
       run: |
         ssh -i ~/.ssh/deploy_key ec2-user@${{ secrets.EC2_HOST }} "
           cd ~/app && \
-          if [ ! -f package.json ]; then
-            echo 'Error: package.json not found in app directory'
-            exit 1
-          fi && \
-          pwd && \
-          ls -la && \
           export NODE_OPTIONS='--max-old-space-size=4096' && \
           export NEXT_TELEMETRY_DISABLED=1 && \
-          export NEXT_DEBUG=1 && \
-          echo 'Starting build in' \$(pwd) && \
-          (while true; do echo 'Build still running...'; free -h; ls -la; sleep 30; done) & \
-          MONITOR_PID=$! && \
-          npm --prefix ~/app run build && \
-          kill $MONITOR_PID || true"
+          npm --prefix ~/app run build || {
+            echo 'Build failed'
+            exit 1
+          }"
 
-    - name: Start Application
+    - name: Deploy with PM2
       run: |
         ssh -i ~/.ssh/deploy_key ec2-user@${{ secrets.EC2_HOST }} "
           cd ~/app && \
-          if [ ! -f package.json ]; then
-            echo 'Error: package.json not found in app directory'
-            exit 1
-          fi && \
-          export NODE_OPTIONS='--max-old-space-size=4096' && \
           pm2 delete nextjs || true && \
           pm2 start --cwd ~/app npm --name \"nextjs\" -- start && \
-          pm2 save"
+          pm2 save && \
+          pm2 list"
 
-    - name: Cleanup and Verify
-      run: |
-        rm /tmp/app.tar.gz
-        sleep 5
-        ssh -i ~/.ssh/deploy_key ec2-user@${{ secrets.EC2_HOST }} "pm2 list"
+    - name: Cleanup
+      run: rm -f /tmp/app.tar.gz
