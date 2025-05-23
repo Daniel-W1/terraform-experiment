@@ -49,6 +49,7 @@ export default function SettingsPage() {
         const response = await fetch('/api/upload/presigned-url', {
           method: 'POST',
           body: uploadFormData,
+          credentials: 'include',
         });
   
         if (!response.ok) {
@@ -63,6 +64,7 @@ export default function SettingsPage() {
       // Now send the update with the correct image URL
       const response = await fetch('/api/user/update', {
         method: 'PUT',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
