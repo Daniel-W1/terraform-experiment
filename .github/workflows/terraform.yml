@@ -88,6 +88,10 @@ jobs:
           tar -xzf app.tar.gz -C app && \
           rm app.tar.gz && \
           cd app && \
+          if [ ! -f package.json ]; then
+            echo 'Error: package.json not found in app directory'
+            exit 1
+          fi && \
           export NODE_OPTIONS='--max-old-space-size=4096' && \
           npm install --legacy-peer-deps"
 
@@ -95,6 +99,10 @@ jobs:
       run: |
         ssh -i ~/.ssh/deploy_key ec2-user@${{ secrets.EC2_HOST }} "
           cd ~/app && \
+          if [ ! -f package.json ]; then
+            echo 'Error: package.json not found in app directory'
+            exit 1
+          fi && \
           export NODE_OPTIONS='--max-old-space-size=4096' && \
           export NEXT_TELEMETRY_DISABLED=1 && \
           npx prisma generate --schema=./src/server/prisma/schema.prisma && \
@@ -106,18 +114,29 @@ jobs:
       run: |
         ssh -i ~/.ssh/deploy_key ec2-user@${{ secrets.EC2_HOST }} "
           cd ~/app && \
+          if [ ! -f package.json ]; then
+            echo 'Error: package.json not found in app directory'
+            exit 1
+          fi && \
+          pwd && \
+          ls -la && \
           export NODE_OPTIONS='--max-old-space-size=4096' && \
           export NEXT_TELEMETRY_DISABLED=1 && \
           export NEXT_DEBUG=1 && \
-          (while true; do echo 'Build still running...'; free -h; sleep 30; done) & \
+          echo 'Starting build in' \$(pwd) && \
+          (while true; do echo 'Build still running...'; free -h; ls -la; sleep 30; done) & \
           MONITOR_PID=$! && \
-          npm run build -- --debug && \
+          npm run build && \
           kill $MONITOR_PID || true"
 
     - name: Start Application
       run: |
         ssh -i ~/.ssh/deploy_key ec2-user@${{ secrets.EC2_HOST }} "
           cd ~/app && \
+          if [ ! -f package.json ]; then
+            echo 'Error: package.json not found in app directory'
+            exit 1
+          fi && \
           export NODE_OPTIONS='--max-old-space-size=4096' && \
           pm2 delete nextjs || true && \
           pm2 start npm --name \"nextjs\" -- start && \
