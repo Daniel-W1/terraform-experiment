@@ -2,6 +2,7 @@ import { prisma } from '@/server/lib/prisma'
 import { NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
+import { AUTH, HTTP_STATUS, ERROR_MESSAGES } from '@/constants'
 
 export async function POST(request: Request) {
   try {
@@ -16,8 +17,8 @@ export async function POST(request: Request) {
     if (!email || !password) {
       console.log('Missing email or password')
       return NextResponse.json(
-        { error: 'Missing email or password' },
-        { status: 400 }
+        { error: ERROR_MESSAGES.MISSING_REQUIRED_FIELDS },
+        { status: HTTP_STATUS.BAD_REQUEST }
       )
     }
 
@@ -46,8 +47,8 @@ export async function POST(request: Request) {
 
     if (!user) {
       return NextResponse.json(
-        { error: 'Invalid credentials' },
-        { status: 401 }
+        { error: ERROR_MESSAGES.INVALID_CREDENTIALS },
+        { status: HTTP_STATUS.UNAUTHORIZED }
       )
     }
 
@@ -57,8 +58,8 @@ export async function POST(request: Request) {
 
     if (!isValidPassword) {
       return NextResponse.json(
-        { error: 'Invalid credentials' },
-        { status: 401 }
+        { error: ERROR_MESSAGES.INVALID_CREDENTIALS },
+        { status: HTTP_STATUS.UNAUTHORIZED }
       )
     }
 
@@ -66,7 +67,7 @@ export async function POST(request: Request) {
     const token = jwt.sign(
       { userId: user.id },
       process.env.JWT_SECRET || 'your-secret-key',
-      { expiresIn: '7d' }
+      { expiresIn: AUTH.JWT_EXPIRY }
     )
 
     // Create response with user data
@@ -82,7 +83,7 @@ export async function POST(request: Request) {
       httpOnly: true,
       secure: false,  // Set to false since we're using http:// with IP
       sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60 // 7 days
+      maxAge: AUTH.COOKIE_MAX_AGE
     })
 
     return response
@@ -90,7 +91,7 @@ export async function POST(request: Request) {
     console.error('Login error:', error)
     return NextResponse.json(
       { error: 'Error during login' },
-      { status: 500 }
+      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
     )
   }
 }

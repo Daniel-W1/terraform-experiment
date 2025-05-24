@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import AWS from 'aws-sdk'
 import jwt from 'jsonwebtoken'
+import { FILE_UPLOAD, HTTP_STATUS, ERROR_MESSAGES } from '@/constants'
 
 export async function POST(request: Request) {
   try {
@@ -31,29 +32,29 @@ export async function POST(request: Request) {
     console.log('Found token:', token ? 'Yes' : 'No')
     
     if (!token) {
-      return NextResponse.json({ error: 'Unauthorized token not found' }, { status: 401 })
+      return NextResponse.json({ error: 'Unauthorized token not found' }, { status: HTTP_STATUS.UNAUTHORIZED })
     }
 
     // Verify JWT token
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key') as { userId: string }
     if (!decoded.userId) {
-      return NextResponse.json({ error: 'Unauthorized can\'t decode user id' }, { status: 401 })
+      return NextResponse.json({ error: 'Unauthorized can\'t decode user id' }, { status: HTTP_STATUS.UNAUTHORIZED })
     }
 
     const formData = await request.formData()
     const file = formData.get('file') as File
     if (!file) {
-      return NextResponse.json({ error: 'No file provided' }, { status: 400 })
+      return NextResponse.json({ error: 'No file provided' }, { status: HTTP_STATUS.BAD_REQUEST })
     }
 
     // Validate file type
     if (!file.type.startsWith('image/')) {
-      return NextResponse.json({ error: 'Only image files are allowed' }, { status: 400 })
+      return NextResponse.json({ error: ERROR_MESSAGES.INVALID_FILE_TYPE }, { status: HTTP_STATUS.BAD_REQUEST })
     }
 
     // Validate file size (5MB max)
-    if (file.size > 5 * 1024 * 1024) {
-      return NextResponse.json({ error: 'File size must be less than 5MB' }, { status: 400 })
+    if (file.size > FILE_UPLOAD.MAX_SIZE_BYTES) {
+      return NextResponse.json({ error: ERROR_MESSAGES.FILE_TOO_LARGE }, { status: HTTP_STATUS.BAD_REQUEST })
     }
 
     const buffer = await file.arrayBuffer()

@@ -1,16 +1,17 @@
 import { prisma } from "@/server/lib/prisma"
 import bcrypt from "bcryptjs"
 import { NextResponse } from "next/server"
+import { AUTH, HTTP_STATUS, ERROR_MESSAGES } from '@/constants'
 
 export async function POST(request: Request) {
   try {
     const { token, password } = await request.json()
 
     // Validate password
-    if (!password || password.length < 8) {
+    if (!password || password.length < AUTH.PASSWORD_MIN_LENGTH) {
       return NextResponse.json(
-        { error: 'Password must be at least 8 characters long' },
-        { status: 400 }
+        { error: ERROR_MESSAGES.PASSWORD_TOO_SHORT },
+        { status: HTTP_STATUS.BAD_REQUEST }
       )
     }
 
@@ -26,7 +27,7 @@ export async function POST(request: Request) {
     if (!user) {
       return NextResponse.json(
         { error: 'Invalid or expired reset token' },
-        { status: 400 }
+        { status: HTTP_STATUS.BAD_REQUEST }
       )
     }
 
@@ -46,7 +47,7 @@ export async function POST(request: Request) {
     console.error('Reset password confirmation error:', error)
     return NextResponse.json(
       { error: 'Error resetting password' },
-      { status: 500 }
+      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
     )
   }
 }
