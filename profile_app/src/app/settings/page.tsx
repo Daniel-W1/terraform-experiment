@@ -4,6 +4,7 @@ import { useAuth } from '@/app/context/AuthContext'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState, useRef } from 'react'
 import Image from 'next/image'
+import { FILE_UPLOAD, ERROR_MESSAGES } from '@/constants'
 
 export default function SettingsPage() {
   const { user, loading } = useAuth()
@@ -102,8 +103,8 @@ export default function SettingsPage() {
     if (!file) return
 
     // Validate file size (5MB max)
-    if (file.size > 5 * 1024 * 1024) {
-      setError('File size must be less than 5MB')
+    if (file.size > FILE_UPLOAD.MAX_SIZE_BYTES) {
+      setError(ERROR_MESSAGES.FILE_TOO_LARGE)
       return
     }
 
@@ -222,7 +223,7 @@ export default function SettingsPage() {
                     Select Image
                   </button>
                   <p className="mt-1 text-sm text-gray-500">
-                    Max file size: 5MB. Supported formats: JPG, PNG, GIF
+                    Max file size: {FILE_UPLOAD.MAX_SIZE_MB}MB. Supported formats: JPG, PNG, GIF
                   </p>
                 </div>
               </div>

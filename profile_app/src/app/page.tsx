@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { PAGINATION } from '@/constants'
 
 interface Profile {
   id: string
@@ -33,8 +34,8 @@ export default function Home() {
   const [profiles, setProfiles] = useState<Profile[]>([])
   const [pagination, setPagination] = useState<PaginationInfo>({
     total: 0,
-    page: 1,
-    limit: 10,
+    page: PAGINATION.DEFAULT_PAGE,
+    limit: PAGINATION.DEFAULT_LIMIT,
     totalPages: 0
   })
   const [loading, setLoading] = useState(true)
