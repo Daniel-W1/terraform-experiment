@@ -3,31 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-
-interface Profile {
-  id: string
-  name: string
-  email: string
-  profileImage: string | null
-  bio: string | null
-  portfolio: {
-    title: string
-    description: string | null
-    items: Array<{
-      title: string
-      description: string | null
-      mediaUrl: string | null
-      mediaType: string
-    }>
-  } | null
-}
-
-interface PaginationInfo {
-  total: number
-  page: number
-  limit: number
-  totalPages: number
-}
+import { Profile, PaginationInfo } from '@/types'
 
 export default function Home() {
   const [profiles, setProfiles] = useState<Profile[]>([])
