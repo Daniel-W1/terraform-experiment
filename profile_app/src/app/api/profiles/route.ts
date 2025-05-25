@@ -1,13 +1,14 @@
 import { prisma } from '@/server/lib/prisma'
 import { NextResponse } from 'next/server'
+import { PAGINATION, HTTP_STATUS, ERROR_MESSAGES } from '@/constants'
 
 export async function GET(request: Request) {
   try {
     console.log('Fetching profiles')
     // Get query parameters
     const { searchParams } = new URL(request.url)
-    const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '10')
+    const page = parseInt(searchParams.get('page') || PAGINATION.DEFAULT_PAGE.toString())
+    const limit = parseInt(searchParams.get('limit') || PAGINATION.DEFAULT_LIMIT.toString())
     const skip = (page - 1) * limit
 
     // Get public profiles with pagination
@@ -67,7 +68,7 @@ export async function GET(request: Request) {
     console.error('Error fetching profiles:', error)
     return NextResponse.json(
       { error: 'Error fetching profiles' },
-      { status: 500 }
+      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
     )
   }
 }
