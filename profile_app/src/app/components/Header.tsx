@@ -11,7 +11,7 @@ export default function Header() {
       <nav className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <Link href="/" className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent">
-            Profile App
+            ProfileHub
           </Link>
           
           <div className="flex items-center gap-6">
